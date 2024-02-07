@@ -1,0 +1,92 @@
+Sub mailto_referrer()
+    
+    Dim PDFPath As String
+    Dim i As Integer
+    Dim pt As PivotTable
+    Dim pf As PivotField
+    Dim optionsCount As Integer
+    
+    If Range("C3").Value = "(Multiple Items)" Then
+        MsgBox "Please select one option!"
+        
+    ElseIf Range("C3").Value = "(All)" Then
+        Set pt = Worksheets("Pivot").PivotTables("PivotTable1")
+        Set pf = pt.PivotFields("Referrer")
+        
+        If Not pt Is Nothing And Not pf Is Nothing Then
+            optionsCount = pf.PivotItems.Count
+            pf.ClearAllFilters
+            
+            For Each Pi In pf.PivotItems
+                pf.CurrentPage = Pi.Name
+                PDFPath = ThisWorkbook.Path & "/" & Range("C3").Value & ".pdf"
+                ActiveSheet.ExportAsFixedFormat Type:=xlTypePDF, FileName:=PDFPath, Quality:=xlQualityStandard
+                
+                Set OutlookApp = CreateObject("Outlook.Application")
+                Set OutlookMail = OutlookApp.CreateItem(0)
+                With OutlookMail
+                    .Subject = Sheet1.Range("C6").Value
+                    .Body = Sheet1.Range("C8").Value & vbNewLine & Sheet1.Range("C10").Value
+                    .To = Sheet1.Range("C3").Value
+                    .CC = Sheet1.Range("C4").Value
+                    .Attachments.Add PDFPath
+                    .Save
+                End With
+    
+                Set OutlookMail = Nothing
+                Set OutlookApp = Nothing
+            Next Pi
+            
+            pf.ClearAllFilters
+            MsgBox "All PDFs exported and attached!"
+        Else
+            MsgBox "No values present!"
+        End If
+        
+    Else
+        PDFPath = ThisWorkbook.Path & "/" & Range("C3").Value & ".pdf"
+        ActiveSheet.ExportAsFixedFormat Type:=xlTypePDF, FileName:=PDFPath, Quality:=xlQualityStandard
+        
+        Set OutlookApp = CreateObject("Outlook.Application")
+            Set OutlookMail = OutlookApp.CreateItem(0)
+            With OutlookMail
+                .Subject = Sheet1.Range("C6").Value
+                .Body = Sheet1.Range("C8").Value & vbNewLine & Sheet1.Range("C10").Value
+                .To = Sheet1.Range("C3").Value
+                .CC = Sheet1.Range("C4").Value
+                .Attachments.Add PDFPath
+                .Save
+            End With
+
+            Set OutlookMail = Nothing
+            Set OutlookApp = Nothing
+            
+'            AppleScript = "set theAttachment to POSIX file """ & PDFPath & """ as alias" & vbCrLf & _
+'                  "tell application ""Mail""" & vbCrLf & _
+'                  "    set newMessage to make new outgoing message" & vbCrLf & _
+'                  "    tell newMessage" & vbCrLf & _
+'                  "        set subject to """ & Sheet1.Range("C6").Value & """" & vbCrLf & _
+'                  "        set content to """ & Sheet1.Range("C8").Value & Sheet1.Range("C10").Value & """" & vbCrLf & _
+'                  "        make new to recipient at end of to recipients with properties {address:""recipient@example.com""}" & vbCrLf & _
+'                  "        make new attachment with properties {file name:theAttachment} at after last paragraph" & vbCrLf & _
+'                  "    end tell" & vbCrLf & _
+'                  "    save newMessage" & vbCrLf & _
+'                  "end tell"
+'
+'            Dim tempScript As String
+'            tempScript = ThisWorkbook.Path & "/TempScript.scpt"
+'            Open tempScript For Output As #1
+'            Print #1, AppleScript
+'            Close #1
+'
+'            Shell "osascript " & tempScript
+    
+        MsgBox "Email draft with PDF attachment saved successfully!"
+    End If
+
+exitHandler:
+    Exit Sub
+errHandler:
+    MsgBox "Could not complete operation!"
+    Resume exitHandler
+End Sub
