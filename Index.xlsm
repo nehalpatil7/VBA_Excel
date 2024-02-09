@@ -5,10 +5,18 @@ Sub mailto_referrer()
     Dim pt As PivotTable
     Dim pf As PivotField
     Dim optionsCount As Integer
+    Dim CC As String
+    
+    Dim teamLeaderRange As Range
+    Set teamLeaderRange = Range("B8")
+    
+    Dim facilitatorRange As Range
+    Set facilitatorRange = Range("C8")
     
     If Range("C3").Value = "(Multiple Items)" Then
         MsgBox "Please select one option!"
-        
+    
+    ' ------------------------------------------------------------------------------------------------------------
     ElseIf Range("C3").Value = "(All)" Then
         Set pt = Worksheets("Pivot").PivotTables("PivotTable1")
         Set pf = pt.PivotFields("Referrer")
@@ -19,16 +27,37 @@ Sub mailto_referrer()
             
             For Each Pi In pf.PivotItems
                 pf.CurrentPage = Pi.Name
-                PDFPath = ThisWorkbook.Path & "/" & Range("C3").Value & ".pdf"
-                ActiveSheet.ExportAsFixedFormat Type:=xlTypePDF, FileName:=PDFPath, Quality:=xlQualityStandard
+                PDFPath = ThisWorkbook.Path & "/" & Range("C3").Value
+                ActiveSheet.ExportAsFixedFormat Type:=xlTypePDF, Filename:=PDFPath, Quality:=xlQualityStandard
+                
+                CC = ""
+                Do While teamLeaderRange.Value <> ""
+                    If teamLeaderRange.Value <> "NaN" Then
+                        CC = CC & teamLeaderRange.Value & ";"
+                    End If
+                    Set teamLeaderRange = teamLeaderRange.Offset(1, 0)
+                Loop
+                If InStr(1, CC, "Grand Total") > 0 Then
+                    CC = Replace(CC, "Grand Total;", "")
+                End If
+                
+                Do While facilitatorRange.Value <> ""
+                    If facilitatorRange.Value <> "NaN" Then
+                        CC = CC & facilitatorRange.Value & ";"
+                    End If
+                    Set facilitatorRange = facilitatorRange.Offset(1, 0)
+                Loop
+                If Len(CC) > 1 Then
+                    CC = Left(CC, Len(CC) - 1)
+                End If
                 
                 Set OutlookApp = CreateObject("Outlook.Application")
                 Set OutlookMail = OutlookApp.CreateItem(0)
                 With OutlookMail
-                    .Subject = Sheet1.Range("C6").Value
-                    .Body = Sheet1.Range("C8").Value & vbNewLine & Sheet1.Range("C10").Value
-                    .To = Sheet1.Range("C3").Value
-                    .CC = Sheet1.Range("C4").Value
+                    .Subject = Sheet1.Range("C6").Value & " - Qtly AUM Referrals"
+                    .Body = Sheet1.Range("C5").Value & vbNewLine
+                    .To = Range("C3").Value
+                    .CC = Sheet1.Range("C4").Value & "Gelber, Harrison; Kochie, Steve; Wealth Finance"
                     .Attachments.Add PDFPath
                     .Save
                 End With
@@ -43,17 +72,39 @@ Sub mailto_referrer()
             MsgBox "No values present!"
         End If
         
+    ' ------------------------------------------------------------------------------------------------------------
     Else
         PDFPath = ThisWorkbook.Path & "/" & Range("C3").Value & ".pdf"
-        ActiveSheet.ExportAsFixedFormat Type:=xlTypePDF, FileName:=PDFPath, Quality:=xlQualityStandard
+        ActiveSheet.ExportAsFixedFormat Type:=xlTypePDF, Filename:=PDFPath, Quality:=xlQualityStandard
+        
+        CC = ""
+        Do While teamLeaderRange.Value <> ""
+            If teamLeaderRange.Value <> "NaN" Then
+                CC = CC & teamLeaderRange.Value & ";"
+            End If
+            Set teamLeaderRange = teamLeaderRange.Offset(1, 0)
+        Loop
+        If InStr(1, CC, "Grand Total") > 0 Then
+            CC = Replace(CC, "Grand Total;", "")
+        End If
+        
+        Do While facilitatorRange.Value <> ""
+            If facilitatorRange.Value <> "NaN" Then
+                CC = CC & facilitatorRange.Value & ";"
+            End If
+            Set facilitatorRange = facilitatorRange.Offset(1, 0)
+        Loop
+        If Len(CC) > 1 Then
+            CC = Left(CC, Len(CC) - 1)
+        End If
         
         Set OutlookApp = CreateObject("Outlook.Application")
             Set OutlookMail = OutlookApp.CreateItem(0)
             With OutlookMail
                 .Subject = Sheet1.Range("C6").Value
-                .Body = Sheet1.Range("C8").Value & vbNewLine & Sheet1.Range("C10").Value
-                .To = Sheet1.Range("C3").Value
-                .CC = Sheet1.Range("C4").Value
+                .Body = Sheet1.Range("C5").Value & vbNewLine & Sheet1.Range("C10").Value
+                .To = Range("C3").Value
+                .CC = CC
                 .Attachments.Add PDFPath
                 .Save
             End With
@@ -66,7 +117,7 @@ Sub mailto_referrer()
 '                  "    set newMessage to make new outgoing message" & vbCrLf & _
 '                  "    tell newMessage" & vbCrLf & _
 '                  "        set subject to """ & Sheet1.Range("C6").Value & """" & vbCrLf & _
-'                  "        set content to """ & Sheet1.Range("C8").Value & Sheet1.Range("C10").Value & """" & vbCrLf & _
+'                  "        set content to """ & Sheet1.Range("C5").Value & """" & vbCrLf & _
 '                  "        make new to recipient at end of to recipients with properties {address:""recipient@example.com""}" & vbCrLf & _
 '                  "        make new attachment with properties {file name:theAttachment} at after last paragraph" & vbCrLf & _
 '                  "    end tell" & vbCrLf & _
@@ -83,6 +134,7 @@ Sub mailto_referrer()
     
         MsgBox "Email draft with PDF attachment saved successfully!"
     End If
+    ' ------------------------------------------------------------------------------------------------------------
 
 exitHandler:
     Exit Sub
@@ -90,3 +142,6 @@ errHandler:
     MsgBox "Could not complete operation!"
     Resume exitHandler
 End Sub
+
+
+
