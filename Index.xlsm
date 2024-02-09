@@ -18,8 +18,8 @@ Sub mailto_referrer()
     
     ' ------------------------------------------------------------------------------------------------------------
     ElseIf Range("C3").Value = "(All)" Then
-        Set pt = Worksheets("Pivot").PivotTables("PivotTable1")
-        Set pf = pt.PivotFields("Referrer")
+        Set pt = Worksheets("Pivot").PivotTables("pivot_table_name")
+        Set pf = pt.PivotFields("field_name")
         
         If Not pt Is Nothing And Not pf Is Nothing Then
             optionsCount = pf.PivotItems.Count
@@ -54,10 +54,10 @@ Sub mailto_referrer()
                 Set OutlookApp = CreateObject("Outlook.Application")
                 Set OutlookMail = OutlookApp.CreateItem(0)
                 With OutlookMail
-                    .Subject = Sheet1.Range("C6").Value & " - Qtly AUM Referrals"
+                    .Subject = Sheet1.Range("C6").Value
                     .Body = Sheet1.Range("C5").Value & vbNewLine
                     .To = Range("C3").Value
-                    .CC = Sheet1.Range("C4").Value & "Gelber, Harrison; Kochie, Steve; Wealth Finance"
+                    .CC = Sheet1.Range("C4").Value
                     .Attachments.Add PDFPath
                     .Save
                 End With
